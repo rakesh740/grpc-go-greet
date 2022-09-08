@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CalculatorClient interface {
-	Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Ans, error)
+	Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Response, error)
 }
 
 type calculatorClient struct {
@@ -33,8 +33,8 @@ func NewCalculatorClient(cc grpc.ClientConnInterface) CalculatorClient {
 	return &calculatorClient{cc}
 }
 
-func (c *calculatorClient) Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Ans, error) {
-	out := new(Ans)
+func (c *calculatorClient) Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
 	err := c.cc.Invoke(ctx, "/greet.Calculator/sum", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *calculatorClient) Sum(ctx context.Context, in *Operand, opts ...grpc.Ca
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
 type CalculatorServer interface {
-	Sum(context.Context, *Operand) (*Ans, error)
+	Sum(context.Context, *Operand) (*Response, error)
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -54,7 +54,7 @@ type CalculatorServer interface {
 type UnimplementedCalculatorServer struct {
 }
 
-func (UnimplementedCalculatorServer) Sum(context.Context, *Operand) (*Ans, error) {
+func (UnimplementedCalculatorServer) Sum(context.Context, *Operand) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Sum not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
