@@ -20,9 +20,10 @@ func main() {
 	if err != nil {
 		logrus.Errorf(" error in creating listener %v \n", err)
 	}
-	logrus.Infof("listening on address: %s", addr)
+	logrus.Infof("listening on address: %s\n", addr)
 
 	s := grpc.NewServer()
+	pb.RegisterCalculatorServer(s, &Server{})
 
 	if err := s.Serve(lis); err != nil {
 		logrus.Errorf(" error in serving in listener %v \n", err)
