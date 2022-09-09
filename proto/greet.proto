@@ -39,4 +39,5 @@ service Calculator {
     rpc greetManyResponse (greetRequest) returns (stream greetResponse);
     rpc getAllPrimes (numberRequest) returns (stream numberResponse);
     rpc getAverage (stream numberRequest) returns (calcResponse);
+    rpc getMaxNumber (stream numberRequest) returns (stream calcResponse);
 } 
