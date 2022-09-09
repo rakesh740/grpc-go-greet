@@ -25,6 +25,7 @@ type CalculatorClient interface {
 	Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Response, error)
 	GreetManyResponse(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (Calculator_GreetManyResponseClient, error)
 	GetAllPrimes(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (Calculator_GetAllPrimesClient, error)
+	GetAverage(ctx context.Context, opts ...grpc.CallOption) (Calculator_GetAverageClient, error)
 }
 
 type calculatorClient struct {
@@ -108,6 +109,40 @@ func (x *calculatorGetAllPrimesClient) Recv() (*NumberResponse, error) {
 	return m, nil
 }
 
+func (c *calculatorClient) GetAverage(ctx context.Context, opts ...grpc.CallOption) (Calculator_GetAverageClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Calculator_ServiceDesc.Streams[2], "/greet.Calculator/getAverage", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calculatorGetAverageClient{stream}
+	return x, nil
+}
+
+type Calculator_GetAverageClient interface {
+	Send(*NumberRequest) error
+	CloseAndRecv() (*CalcResponse, error)
+	grpc.ClientStream
+}
+
+type calculatorGetAverageClient struct {
+	grpc.ClientStream
+}
+
+func (x *calculatorGetAverageClient) Send(m *NumberRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *calculatorGetAverageClient) CloseAndRecv() (*CalcResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(CalcResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
@@ -115,6 +150,7 @@ type CalculatorServer interface {
 	Sum(context.Context, *Operand) (*Response, error)
 	GreetManyResponse(*GreetRequest, Calculator_GreetManyResponseServer) error
 	GetAllPrimes(*NumberRequest, Calculator_GetAllPrimesServer) error
+	GetAverage(Calculator_GetAverageServer) error
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -130,6 +166,9 @@ func (UnimplementedCalculatorServer) GreetManyResponse(*GreetRequest, Calculator
 }
 func (UnimplementedCalculatorServer) GetAllPrimes(*NumberRequest, Calculator_GetAllPrimesServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetAllPrimes not implemented")
+}
+func (UnimplementedCalculatorServer) GetAverage(Calculator_GetAverageServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetAverage not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -204,6 +243,32 @@ func (x *calculatorGetAllPrimesServer) Send(m *NumberResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Calculator_GetAverage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CalculatorServer).GetAverage(&calculatorGetAverageServer{stream})
+}
+
+type Calculator_GetAverageServer interface {
+	SendAndClose(*CalcResponse) error
+	Recv() (*NumberRequest, error)
+	grpc.ServerStream
+}
+
+type calculatorGetAverageServer struct {
+	grpc.ServerStream
+}
+
+func (x *calculatorGetAverageServer) SendAndClose(m *CalcResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *calculatorGetAverageServer) Recv() (*NumberRequest, error) {
+	m := new(NumberRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -226,6 +291,11 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "getAllPrimes",
 			Handler:       _Calculator_GetAllPrimes_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "getAverage",
+			Handler:       _Calculator_GetAverage_Handler,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "greet.proto",

@@ -25,6 +25,10 @@ message numberResponse{
     int32 prime = 1;
 }
 
+message calcResponse{
+    int32 result = 1;
+}
+
 
 message greetResponse {
     string response = 1;
@@ -34,4 +38,5 @@ service Calculator {
     rpc sum (operand) returns (response);
     rpc greetManyResponse (greetRequest) returns (stream greetResponse);
     rpc getAllPrimes (numberRequest) returns (stream numberResponse);
+    rpc getAverage (stream numberRequest) returns (calcResponse);
 } 
