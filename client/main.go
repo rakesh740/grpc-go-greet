@@ -23,5 +23,6 @@ func main() {
 	// doGreetManyTimes(c)
 
 	// doSum(c)
-	doGetPrimes(c)
+	//doGetPrimes(c)
+	doGetAverage(c)
 }
