@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CalculatorClient interface {
 	Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Response, error)
+	GreetManyResponse(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (Calculator_GreetManyResponseClient, error)
 }
 
 type calculatorClient struct {
@@ -42,11 +43,44 @@ func (c *calculatorClient) Sum(ctx context.Context, in *Operand, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *calculatorClient) GreetManyResponse(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (Calculator_GreetManyResponseClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Calculator_ServiceDesc.Streams[0], "/greet.Calculator/greetManyResponse", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calculatorGreetManyResponseClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Calculator_GreetManyResponseClient interface {
+	Recv() (*GreetResponse, error)
+	grpc.ClientStream
+}
+
+type calculatorGreetManyResponseClient struct {
+	grpc.ClientStream
+}
+
+func (x *calculatorGreetManyResponseClient) Recv() (*GreetResponse, error) {
+	m := new(GreetResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
 type CalculatorServer interface {
 	Sum(context.Context, *Operand) (*Response, error)
+	GreetManyResponse(*GreetRequest, Calculator_GreetManyResponseServer) error
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -56,6 +90,9 @@ type UnimplementedCalculatorServer struct {
 
 func (UnimplementedCalculatorServer) Sum(context.Context, *Operand) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Sum not implemented")
+}
+func (UnimplementedCalculatorServer) GreetManyResponse(*GreetRequest, Calculator_GreetManyResponseServer) error {
+	return status.Errorf(codes.Unimplemented, "method GreetManyResponse not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -88,6 +125,27 @@ func _Calculator_Sum_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Calculator_GreetManyResponse_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GreetRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CalculatorServer).GreetManyResponse(m, &calculatorGreetManyResponseServer{stream})
+}
+
+type Calculator_GreetManyResponseServer interface {
+	Send(*GreetResponse) error
+	grpc.ServerStream
+}
+
+type calculatorGreetManyResponseServer struct {
+	grpc.ServerStream
+}
+
+func (x *calculatorGreetManyResponseServer) Send(m *GreetResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +158,12 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Calculator_Sum_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "greetManyResponse",
+			Handler:       _Calculator_GreetManyResponse_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "greet.proto",
 }

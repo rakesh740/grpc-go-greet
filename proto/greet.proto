@@ -13,6 +13,15 @@ message response {
     uint32 answer = 1;
 }
 
+message greetRequest {
+    string name = 1;
+}
+
+message greetResponse {
+    string response = 1;
+}
+
 service Calculator {
     rpc sum (operand) returns (response);
+    rpc greetManyResponse (greetRequest) returns (stream greetResponse);
 } 

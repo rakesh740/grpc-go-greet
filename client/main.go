@@ -20,5 +20,6 @@ func main() {
 
 	c := pb.NewCalculatorClient(conn)
 
-	doSum(c)
+	// doSum(c)
+	doGreetManyTimes(c)
 }
