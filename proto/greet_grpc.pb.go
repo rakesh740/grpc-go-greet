@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type CalculatorClient interface {
 	Sum(ctx context.Context, in *Operand, opts ...grpc.CallOption) (*Response, error)
 	GreetManyResponse(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (Calculator_GreetManyResponseClient, error)
+	GetAllPrimes(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (Calculator_GetAllPrimesClient, error)
 }
 
 type calculatorClient struct {
@@ -75,12 +76,45 @@ func (x *calculatorGreetManyResponseClient) Recv() (*GreetResponse, error) {
 	return m, nil
 }
 
+func (c *calculatorClient) GetAllPrimes(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (Calculator_GetAllPrimesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Calculator_ServiceDesc.Streams[1], "/greet.Calculator/getAllPrimes", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calculatorGetAllPrimesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Calculator_GetAllPrimesClient interface {
+	Recv() (*NumberResponse, error)
+	grpc.ClientStream
+}
+
+type calculatorGetAllPrimesClient struct {
+	grpc.ClientStream
+}
+
+func (x *calculatorGetAllPrimesClient) Recv() (*NumberResponse, error) {
+	m := new(NumberResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
 type CalculatorServer interface {
 	Sum(context.Context, *Operand) (*Response, error)
 	GreetManyResponse(*GreetRequest, Calculator_GreetManyResponseServer) error
+	GetAllPrimes(*NumberRequest, Calculator_GetAllPrimesServer) error
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -93,6 +127,9 @@ func (UnimplementedCalculatorServer) Sum(context.Context, *Operand) (*Response, 
 }
 func (UnimplementedCalculatorServer) GreetManyResponse(*GreetRequest, Calculator_GreetManyResponseServer) error {
 	return status.Errorf(codes.Unimplemented, "method GreetManyResponse not implemented")
+}
+func (UnimplementedCalculatorServer) GetAllPrimes(*NumberRequest, Calculator_GetAllPrimesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetAllPrimes not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -146,6 +183,27 @@ func (x *calculatorGreetManyResponseServer) Send(m *GreetResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Calculator_GetAllPrimes_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(NumberRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CalculatorServer).GetAllPrimes(m, &calculatorGetAllPrimesServer{stream})
+}
+
+type Calculator_GetAllPrimesServer interface {
+	Send(*NumberResponse) error
+	grpc.ServerStream
+}
+
+type calculatorGetAllPrimesServer struct {
+	grpc.ServerStream
+}
+
+func (x *calculatorGetAllPrimesServer) Send(m *NumberResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -162,6 +220,11 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "greetManyResponse",
 			Handler:       _Calculator_GreetManyResponse_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "getAllPrimes",
+			Handler:       _Calculator_GetAllPrimes_Handler,
 			ServerStreams: true,
 		},
 	},
