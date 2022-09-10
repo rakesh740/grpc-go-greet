@@ -27,5 +27,7 @@ func main() {
 	//doGetAverage(c)
 	//doGetMax(c)
 
-	doSqrt(c)
+	//doSqrt(c)
+
+	doGreetWithDeadline(c)
 }

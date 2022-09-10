@@ -51,4 +51,5 @@ service Calculator {
     rpc getAverage (stream numberRequest) returns (calcResponse);
     rpc getMaxNumber (stream numberRequest) returns (stream calcResponse);
     rpc sqrt (SqrtRequest) returns (SqrtResponse);
+    rpc greetWithDeadline (greetRequest) returns (greetResponse);
 } 
