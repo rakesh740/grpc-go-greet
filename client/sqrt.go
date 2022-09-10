@@ -22,6 +22,8 @@ func doSqrt(c pb.CalculatorClient) {
 		} else {
 			logrus.Error(" non grpc error ", err)
 		}
+
+		return
 	}
 
 	logrus.Info(res.Answer)
