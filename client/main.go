@@ -25,6 +25,7 @@ func main() {
 	// doSum(c)
 	//doGetPrimes(c)
 	//doGetAverage(c)
+	//doGetMax(c)
 
-	doGetMax(c)
+	doSqrt(c)
 }

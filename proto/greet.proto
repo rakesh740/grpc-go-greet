@@ -4,6 +4,16 @@ package greet;
 
 option go_package = "projects/Greet/proto";
 
+
+message SqrtRequest  {
+    float num = 1;
+}
+
+message SqrtResponse {
+    double answer = 1;
+}
+
+
 message operand {
     uint32 firstNum = 1;
     uint32 secondNum = 2;
@@ -40,4 +50,5 @@ service Calculator {
     rpc getAllPrimes (numberRequest) returns (stream numberResponse);
     rpc getAverage (stream numberRequest) returns (calcResponse);
     rpc getMaxNumber (stream numberRequest) returns (stream calcResponse);
+    rpc sqrt (SqrtRequest) returns (SqrtResponse);
 } 
