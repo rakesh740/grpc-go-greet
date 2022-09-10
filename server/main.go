@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type Server struct {
@@ -22,7 +23,22 @@ func main() {
 	}
 	logrus.Infof("listening on address: %s\n", addr)
 
-	s := grpc.NewServer()
+	opts := []grpc.ServerOption{}
+
+	tls := true // false if no security
+	if tls {
+		certFile := "ssl/server.crt"
+		keyFile := "ssl/server.pem"
+		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+		if err != nil {
+			logrus.Error(" error in loading certificates ")
+		}
+
+		opts = append(opts, grpc.Creds(creds))
+	}
+
+	s := grpc.NewServer(opts...)
+
 	pb.RegisterCalculatorServer(s, &Server{})
 
 	if err := s.Serve(lis); err != nil {

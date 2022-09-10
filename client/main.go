@@ -3,16 +3,28 @@ package main
 import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 
 	pb "projects/Greet/proto"
 )
 
-var addr string = "0.0.0.0:8192"
+var addr string = "localhost:8192"
 
 func main() {
+	tls := true
+	opts := []grpc.DialOption{}
 
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if tls {
+		certFile := "ssl/ca.crt"
+		creds, err := credentials.NewClientTLSFromFile(certFile, "")
+		if err != nil {
+			logrus.Error(" error while loading certificate in server ")
+		}
+
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	}
+
+	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		logrus.Errorf(" error in dial connection %s", err)
 	}
@@ -20,7 +32,7 @@ func main() {
 
 	c := pb.NewCalculatorClient(conn)
 
-	// doGreetManyTimes(c)
+	doGreetManyTimes(c)
 
 	// doSum(c)
 	//doGetPrimes(c)
@@ -28,6 +40,5 @@ func main() {
 	//doGetMax(c)
 
 	//doSqrt(c)
-
-	doGreetWithDeadline(c)
+	//doGreetWithDeadline(c)
 }

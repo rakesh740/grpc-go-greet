@@ -13,7 +13,7 @@ import (
 func doGreetWithDeadline(c pb.CalculatorClient) {
 	logrus.Info(" doGreetWithDeadline invoked")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
 	req := pb.GreetRequest{
@@ -27,7 +27,7 @@ func doGreetWithDeadline(c pb.CalculatorClient) {
 			if e.Code() == codes.DeadlineExceeded {
 				logrus.Error(" deadline exceeded ")
 			} else {
-				logrus.Error(" unexpected grpc error ")
+				logrus.Error(" unexpected grpc error ", err.Error())
 			}
 		} else {
 			logrus.Error(" non grpc error ")
