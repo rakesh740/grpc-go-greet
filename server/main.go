@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
@@ -25,7 +26,8 @@ func main() {
 
 	opts := []grpc.ServerOption{}
 
-	tls := true // false if no security
+	tls := true
+	tls = false // false if no security
 	if tls {
 		certFile := "ssl/server.crt"
 		keyFile := "ssl/server.pem"
@@ -40,6 +42,8 @@ func main() {
 	s := grpc.NewServer(opts...)
 
 	pb.RegisterCalculatorServer(s, &Server{})
+
+	reflection.Register(s)
 
 	if err := s.Serve(lis); err != nil {
 		logrus.Errorf(" error in serving in listener %v \n", err)
